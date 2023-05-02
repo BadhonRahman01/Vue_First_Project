@@ -1,64 +1,143 @@
 <template>
-    <form @submit.prevent="submitForm">
-        <div class="form-control">
-            <label for="first-name">First Name</label>
-            <input type="text" id="first-name" v-model.trim="firstName" required>
-        </div>
-        <div class="form-control">
-            <label for="last-name">Last Name</label>
-            <input type="text" id="last-name" v-model.trim="lastName" required>
-        </div>
-        <div class="form-control">
-            <label for="description">Description</label>
-            <textarea id="description" rows="5" v-model.trim="description"></textarea>
-        </div>
-        <div class="form-control">
-            <label for="rate">Hourly Rate</label>
-            <input type="number" id="rate" v-model.number="rate" required>
-        </div>
-        <div class="form-control">
-            <h3>Areas of Expertise</h3>
-            <div>
-                <input type="checkbox" id="frontend" value="frontend" v-model="areas">
-                <label for="frontend">Frontend Development</label>
-            </div>
-            <div>
-                <input type="checkbox" id="backend" value="backend" v-model="areas">
-                <label for="backend">Backend Development</label>
-            </div>
-            <div>
-                <input type="checkbox" id="career" value="career" v-model="areas">
-                <label for="career">Career Coaching</label>
-            </div>
-        </div>
-        <base-button>Register</base-button>
-    </form>
+  <form @submit.prevent="submitForm">
+    <div class="form-control" :class="{invalid: !firstName.isValid}">
+      <label for="first-name">First Name</label>
+      <input
+        type="text"
+        id="first-name"
+        v-model.trim="firstName.val"
+        @blur="clearValidity('firstName')"
+      />
+      <p v-if="!firstName.isValid">First name must not be empty</p>
+    </div>
+    <div class="form-control" :class="{invalid: !lastName.isValid}">
+      <label for="last-name">Last Name</label>
+      <input type="text" id="last-name" v-model.trim="lastName.val"  @blur="clearValidity('lastName')"/>
+      <p v-if="!lastName.isValid">Last name must not be empty</p>
+    </div>
+    <div class="form-control" :class="{invalid: !description.isValid}">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        rows="5"
+        v-model.trim="description.val"
+        @blur="clearValidity('description')"
+      ></textarea>
+      <p v-if="!description.isValid">Description must not be empty</p>
+    </div>
+    <div class="form-control" :class="{invalid: !rate.isValid}">
+      <label for="rate">Hourly Rate</label>
+      <input type="number" id="rate" v-model.number="rate.val"  @blur="clearValidity('rate')"/>
+      <p v-if="!rate.isValid">Rate must not be empty</p>
+    </div>
+    <div class="form-control" :class="{invalid: !areas.isValid}">
+      <h3>Areas of Expertise</h3>
+      <div>
+        <input
+          type="checkbox"
+          id="frontend"
+          value="frontend"
+          v-model="areas.val"
+          @blur="clearValidity('areas')"
+        />
+        <label for="frontend">Frontend Development</label>
+        <p v-if="!areas.isValid">Please select atleast one</p>
+      </div>
+      <div>
+        <input
+          type="checkbox"
+          id="backend"
+          value="backend"
+          v-model="areas.val"
+          @blur="clearValidity('areas')"
+        />
+        <label for="backend">Backend Development</label>
+        <p v-if="!areas.isValid">Please select atleast one</p>
+      </div>
+      <div>
+        <input type="checkbox" id="career" value="career" v-model="areas.val" @blur="clearValidity('areas')"/>
+        <label for="career">Career Coaching</label>
+        <p v-if="!areas.isValid">Please select atleast one</p>
+      </div>
+    </div>
+    <p v-if="!formIsValid">Please fix the errors then try again</p>
+    <base-button>Register</base-button>
+  </form>
 </template>
 
 <script>
 export default {
-    data(){
-        return {
-            firstName: '',
-            lastName: '',
-            description: '',
-            rate: null,
-            areas: [],
-        };
+  emits: ["save-data"],
+  data() {
+    return {
+      firstName: {
+        val: "",
+        isValid: true,
+      },
+      lastName: {
+        val: "",
+        isValid: true,
+      },
+      description: {
+        val: "",
+        isValid: true,
+      },
+      rate: {
+        val: null,
+        isValid: true,
+      },
+      areas: {
+        val: [],
+        isValid: true,
+      },
+      formIsValid: true,
+    };
+  },
+  methods: {
+    clearValidity(input){
+      this[input].isValid = true;
     },
-    methods: {
-        submitForm(){
-            const formData ={
-                fist: this.firstName,
-                last: this.lastName,
-                desc: this.description,
-                rate: this.rate,
-                areas: this.areas,
-            };
-            console.log(formData);
-            }
-        }
-    }
+    validateForm() {
+      this.formIsValid = true;
+      if (this.firstName.val === "") {
+        this.firstName.isValid = false;
+        this.formIsValid = false;
+      }
+      if (this.lastName.val === "") {
+        this.lastName.isValid = false;
+        this.formIsValid = false;
+      }
+      if (this.description.val === "") {
+        this.description.isValid = false;
+        this.formIsValid = false;
+      }
+      if (!this.rate.val || this.rate.val < 0) {
+        this.rate.isValid = false;
+        this.formIsValid = false;
+      }
+      if (this.areas.val.length === 0) {
+        this.areas.isValid = false;
+        this.formIsValid = false;
+      }
+    },
+    submitForm() {
+      this.validateForm();
+
+      if (!this.formIsValid) {
+        return;
+      }
+
+      const formData = {
+        first: this.firstName.val,
+        last: this.lastName.val,
+        desc: this.description.val,
+        rate: this.rate.val,
+        areas: this.areas.val,
+      };
+      this.$emit("save-data", formData);
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -72,7 +151,7 @@ label {
   margin-bottom: 0.5rem;
 }
 
-input[type='checkbox'] + label {
+input[type="checkbox"] + label {
   font-weight: normal;
   display: inline;
   margin: 0 0 0 0.5rem;
@@ -93,13 +172,13 @@ textarea:focus {
   border-color: #3d008d;
 }
 
-input[type='checkbox'] {
+input[type="checkbox"] {
   display: inline;
   width: auto;
   border: none;
 }
 
-input[type='checkbox']:focus {
+input[type="checkbox"]:focus {
   outline: #3d008d solid 1px;
 }
 
