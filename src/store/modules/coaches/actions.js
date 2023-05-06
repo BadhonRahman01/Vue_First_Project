@@ -4,11 +4,14 @@ export default {
         const coachData = {
             firstName: data.first,
             lastName: data.last,
-            areas: data.areas,
             description: data.desc,
             hourlyRate: data.rate,
+            areas: data.areas,
         };
-     const response =   await fetch(`https://firstvueproject-b1da3-default-rtdb.firebaseio.com/coaches/${userId}.json`,{
+
+     const response =   await fetch(
+        `https://firstvueproject-b1da3-default-rtdb.firebaseio.com/coaches/${userId}.json`,
+        {
             method: 'PUT',
             body: JSON.stringify(coachData),
         });
@@ -23,26 +26,35 @@ export default {
             id: userId
         });
     },
-    async loadCoaches(context){
-      const response = await fetch(`https://firstvueproject-b1da3-default-rtdb.firebaseio.com/coaches.json`);
+    async loadCoaches(context, payload){
+        if(!payload.forceRefresh && !context.getters.shouldUpdate){
+            return;
+        }
+
+      const response = await fetch(
+        `https://firstvueproject-b1da3-default-rtdb.firebaseio.com/coaches.json`
+        );
       const responseData = await response.json();
+
       if(!response.ok){
-        //   const error = new Error(responseData.message || 'Failed to fetch!');
-        //   throw error;
+          const error = new Error(responseData.message || 'Failed to fetch!');
+          throw error;
       }
         const coaches = [];
+
         for ( const key in responseData){
             const coach = {
                 id: key,
                 firstName: responseData[key].firstName,
                 lastName: responseData[key].lastName,
-                areas: responseData[key].areas,
                 description: responseData[key].description,
                 hourlyRate: responseData[key].hourlyRate,
+                areas: responseData[key].areas,       
             };
             coaches.push(coach);
         }
 
         context.commit('setCoaches', coaches);
+        context.commit('setFetchTimestamp');
     }
 };
